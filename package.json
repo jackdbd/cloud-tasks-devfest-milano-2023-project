@@ -1,11 +1,14 @@
 {
-    "name": "devfest-milano-2023",
-    "main": "index.ts",
-    "devDependencies": {
-        "@types/node": "^16"
-    },
-    "dependencies": {
-        "@pulumi/pulumi": "^3.0.0",
-        "@pulumi/gcp": "^7.0.0"
-    }
+  "name": "devfest-milano-2023",
+  "main": "index.ts",
+  "scripts": {
+    "deploy": "pulumi up --yes"
+  },
+  "dependencies": {
+    "@pulumi/pulumi": "^3.94.1",
+    "@pulumi/gcp": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0"
+  }
 }
