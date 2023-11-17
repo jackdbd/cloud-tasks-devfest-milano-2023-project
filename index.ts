@@ -1,138 +1,183 @@
-import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
+import {
+  project,
+  enqueuer_location,
+  enqueuer_name,
+  worker_location,
+} from "./iac/constants";
+import { sa_enqueuer } from "./iac/service-accounts";
+import { enqueuer_bucket, enqueuer_bucket_object } from "./iac/cloud-storage";
+import { worker } from "./iac/cloud-run";
+import { queue } from "./iac/cloud-tasks";
+import { config } from "./iac/config";
 
-const project = "devfest-milano-2023";
-
-// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudtasks/
-const queue_name = "my-queue";
-const queue = new gcp.cloudtasks.Queue(queue_name, {
-  location: "europe-west3",
-  name: queue_name,
-  rateLimits: { maxDispatchesPerSecond: 499 },
-  retryConfig: { maxAttempts: 99 },
-  stackdriverLoggingConfig: { samplingRatio: 0.5 },
+new gcp.projects.Service("enable-cloud-build-api", {
+  service: "cloudbuild.googleapis.com",
 });
 
-const queue_id = queue.id;
-const queue_rate_limits = queue.rateLimits;
-const queue_retry_config = queue.retryConfig;
-const queue_logging = queue.stackdriverLoggingConfig;
-
-// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudfunctionsv2/
-// const func = new gcp.cloudfunctionsv2.Function("enqueuer", {
-//   location: "europe-west8",
-//   description: "Function that enqueues tasks to a Cloud Tasks queue",
-//   buildConfig: {
-//     runtime: "nodejs20",
-//     entryPoint: "helloGET",
-//     environmentVariables: {
-//       AAA: "bbb",
-//     },
-//     source: {
-//       storageSource: {
-//         bucket: "my-source-bucket", // The Source code is stored in Cloud Storage bucket
-//         object: "function.zip", // The object in the bucket
-//       },
-//     },
-//   },
-//   serviceConfig: {
-//     allTrafficOnLatestRevision: true,
-//     availableMemory: "256M",
-//     environmentVariables: {
-//       SERVICE_CONFIG: "config_test",
-//     },
-//     maxInstanceCount: 2,
-//     minInstanceCount: 1,
-//     // serviceAccountEmail: account.email,
-//     timeoutSeconds: 60,
-//     // ingressSettings: "ALLOW_INTERNAL_ONLY",
-//   },
-//   //   eventTrigger: {
-//   //     eventType: "google.cloud.functions.v1.CloudFunctionsFunction.HttpRequest", // Trigger on HTTP requests
-//   //   },
-// });
-
-const enqueuer_location = "europe-west8";
-const worker_location = "europe-west8";
-
-const enqueuer_name = "enqueuer";
-const worker_name = "worker";
-
-const sa_enqueuer_id = `${enqueuer_name}-user`;
-const sa_worker_id = `${worker_name}-user`;
-
-// https://www.pulumi.com/registry/packages/gcp/api-docs/serviceaccount/account/
-const sa_enqueuer = new gcp.serviceaccount.Account(sa_enqueuer_id, {
-  accountId: sa_enqueuer_id,
-  description: "Service Account for the application that enqueues tasks",
-  displayName: "Tasks enqueuer service account",
+new gcp.projects.Service("enable-cloud-functions-api", {
+  service: "cloudfunctions.googleapis.com",
+  disableOnDestroy: true,
 });
 
-const sa_worker = new gcp.serviceaccount.Account(sa_worker_id, {
-  accountId: sa_worker_id,
-  description: "Service Account for the application that processes tasks",
-  displayName: "Tasks worker service account",
+new gcp.projects.Service("enable-cloud-run-api", {
+  service: "run.googleapis.com",
+  disableOnDestroy: true,
 });
 
-// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudrunv2/
-const worker = new gcp.cloudrunv2.Service(
-  worker_name,
+const enqueuer = new gcp.cloudfunctions.Function(
+  enqueuer_name,
   {
-    description:
-      "Service that processes the tasks dispatched by a Cloud Tasks queue",
-    ingress: "INGRESS_TRAFFIC_ALL",
-    location: worker_location,
-    name: worker_name,
-    template: {
-      containers: [
-        {
-          envs: [{ name: "THE_ANSWER", value: "42" }],
-          image: "us-docker.pkg.dev/cloudrun/container/hello",
-          startupProbe: {
-            failureThreshold: 3,
-            initialDelaySeconds: 1,
-            periodSeconds: 240,
-            tcpSocket: { port: 8080 },
-            timeoutSeconds: 10,
-          },
-        },
-      ],
-      maxInstanceRequestConcurrency: 10,
-      timeout: "2.5s",
-      serviceAccount: sa_worker.email,
-      scaling: { maxInstanceCount: 1, minInstanceCount: 0 },
-    },
-    traffics: [{ percent: 100, type: "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST" }],
+    availableMemoryMb: 128,
+    buildEnvironmentVariables: { AAA: "bbb" },
+    description: "Function that enqueues tasks to a Cloud Tasks queue",
+    entryPoint: config.require("enqueuer-entry-point"),
+    environmentVariables: { NODE_ENV: "production" },
+    maxInstances: 3,
+    minInstances: 0,
+    region: enqueuer_location,
+    runtime: "nodejs20",
+    serviceAccountEmail: sa_enqueuer.email,
+    sourceArchiveBucket: enqueuer_bucket.id,
+    // IMPORTANT: use .name in sourceArchiveObject, not .id
+    sourceArchiveObject: enqueuer_bucket_object.name,
+    timeout: 59,
+    triggerHttp: true,
   },
+  // The application code of this cloud function creates tasks and sends them to
+  // a Cloud Tasks queue. So we declare that queue as an explicit dependency.
   { dependsOn: [queue] }
 );
 
-// export const worker_policy = gcp.cloudrunv2.getServiceIamPolicy({
-//   location: worker_location,
-//   name: worker_name,
-// });
+const enqueuer_invoker = new gcp.cloudfunctions.FunctionIamMember(
+  "enqueuer-invoker",
+  {
+    cloudFunction: enqueuer.id,
+    member: "allUsers",
+    project,
+    region: enqueuer_location,
+    role: "roles/cloudfunctions.invoker",
+  }
+);
 
-// export const worker_iam_bindings = worker_policy.then(
-//   (pr) => JSON.parse(pr.policyData).bindings
+// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudfunctionsv2/
+const enqueuer_2nd_gen = new gcp.cloudfunctionsv2.Function(
+  "enqueuer-2nd-gen",
+  {
+    location: enqueuer_location,
+    description: "Function that enqueues tasks to a Cloud Tasks queue",
+    buildConfig: {
+      runtime: "nodejs20",
+      entryPoint: config.require("enqueuer-entry-point"),
+      environmentVariables: {
+        THE_ANSWER: "42",
+      },
+      source: {
+        storageSource: {
+          bucket: enqueuer_bucket.name,
+          object: enqueuer_bucket_object.name,
+        },
+      },
+    },
+    serviceConfig: {
+      allTrafficOnLatestRevision: true,
+      availableMemory: "256M",
+      environmentVariables: {
+        NODE_ENV: "production",
+      },
+      ingressSettings: "ALLOW_ALL",
+      maxInstanceCount: 2,
+      minInstanceCount: 0,
+      serviceAccountEmail: sa_enqueuer.email,
+      timeoutSeconds: 19,
+    },
+  },
+  // The application code of this cloud function creates tasks and sends them to
+  // a Cloud Tasks queue. So we declare that queue as an explicit dependency.
+  { dependsOn: [queue] }
+);
+
+// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudfunctionsv2/functioniambinding/
+// // TODO: this does not work
+// export const enqueuer_functions_invoker_binding =
+//   new gcp.cloudfunctionsv2.FunctionIamBinding(
+//     "enqueuer-functions-invoker-binding",
+//     {
+//       cloudFunction: enqueuer_2nd_gen.id,
+//       location: enqueuer_location,
+//       members: ["allUsers"],
+//       role: "roles/cloudfunctions.invoker",
+//     }
+//   );
+
+// // TODO: this throws an invalid argument exception
+// export const enqueuer_run_invoker_binding =
+//   new gcp.cloudfunctionsv2.FunctionIamBinding("enqueuer-run-invoker-binding", {
+//     cloudFunction: enqueuer_2nd_gen.id,
+//     location: enqueuer_location,
+//     members: ["allUsers"],
+//     role: "roles/run.invoker",
+//   });
+
+// // TODO: this does not work
+// export const enqueuer_2nd_gen_invoker =
+//   new gcp.cloudfunctionsv2.FunctionIamMember("enqueuer-2nd-gen-invoker", {
+//     cloudFunction: enqueuer_2nd_gen.id,
+//     location: enqueuer_location,
+//     member: "allUsers",
+//     role: "roles/cloudfunctions.invoker",
+//   });
+
+// https://www.pulumi.com/registry/packages/gcp/api-docs/cloudrunv2/serviceiambinding/
+// // TODO: this throws this exception: Resource 'worker-invoker-binding-dcbad61'
+// // of kind 'SERVICE' in region 'europe-west8' in project 'devfest-milano-2023'
+// // does not exist.
+// export const worker_invoker_binding = new gcp.cloudrunv2.ServiceIamBinding(
+//   "worker-invoker-binding",
+//   {
+//     location: worker_location,
+//     members: ["allUsers"],
+//     project,
+//     role: "roles/run.invoker",
+//   },
+//   { dependsOn: [worker] }
 // );
 
-// const binding = new gcp.cloudrunv2.ServiceIamBinding("worker-iam-binding", {})
+// TODO: this does not work. It tells me that it cannot find the resource
+// worker-invoker-b2a1d67. Strange, I thought this would CREATE such resource.
+// export const worker_invoker = new gcp.cloudrunv2.ServiceIamMember(
+//   "worker-invoker",
+//   {
+//     location: worker_location,
+//     member: "allUsers",
+//     // project,
+//     role: "roles/run.invoker",
+//   },
+//   { dependsOn: [worker] }
+// );
 
-// export const worker_id = worker.id;
-// export const worker_etag = worker.etag;
-// export const worker_ingress = worker.ingress;
-// export const worker_template = worker.template;
-// export const worker_terminal_conditions = worker.terminalConditions;
-export const worker_uri = worker.uri;
-
-// Here are two equivalent ways to retrieve the IAM bindings for the GCP project
-
-// const project_policy = gcp.projects.getIamPolicy({ project });
-// export const project_iam_bindings = project_policy.then(
-//   (pr) => JSON.parse(pr.policyData).bindings
+// TODO: this works, but I want to create a IAM binding JUST for ONE Cloud Run
+// service, not for all Cloud Run services of the project.
+// export const iam_binding = new gcp.projects.IAMBinding(
+//   "binding",
+//   {
+//     members: ["allUsers"],
+//     project,
+//     role: "roles/run.invoker",
+//   },
+//   { dependsOn: [worker] }
 // );
 
 const project_policy = gcp.projects.getIamPolicyOutput({ project });
+
+// I think it's always a good idea to show the GCP project IAM bindings in the
+// dashboard of the Pulumi Stack.
 export const project_iam_bindings = project_policy.policyData.apply(
   (d) => JSON.parse(d).bindings
 );
+
+export const publicly_accessible_services = {
+  enqueuer: enqueuer.httpsTriggerUrl,
+  // enqueuer_2nd_gen: enqueuer_2nd_gen.url,
+  worker: worker.uri,
+};
