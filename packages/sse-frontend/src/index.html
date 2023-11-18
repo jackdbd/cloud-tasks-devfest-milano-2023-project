@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>SSE Example</title>
+  <script>
+    let config = {};
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const response = await fetch("config.json");
+      config = await response.json();
+      console.log("🚀 ~ config:", config)
+    });
+
+    async function enableSSE() {
+      // const response = await fetch(`${config.sse_endpoint}`);
+      // const data = await response.json();
+      // console.log("🚀 ~ enableSSE ~ data:", data)
+
+      const sse = new EventSource(config.sse_endpoint)
+
+      sse.addEventListener('message', function(ev) {
+        console.log("🚀 ~ sse.addEventListener ~ message ev:", ev)
+        console.log(ev.data);
+      })
+
+      sse.addEventListener('open', function(ev) {
+        console.log("🚀 ~ sse.addEventListener ~ open ev:", ev)
+        console.log(`SSE Connection was opened.`)
+      })
+
+      sse.addEventListener('error', function(ev) {
+        console.log(`SSE error`, ev)
+        if (ev.readyState == EventSource.CLOSED) {
+          console.log(`SSE Connection was closed.`)
+        }
+      })
+    }
+
+    async function checkSSE() {
+      const response = await fetch(`${config.sse_root}`);
+      const data = await response.json();
+      console.log("🚀 ~ checkSSE ~ data:", data)
+    }
+
+    async function getTheTime() {
+      const response = await fetch(`${config.api}/data`);
+      const data = await response.json();
+      console.log("🚀 ~ getTheTime ~ data:", data)
+      document.querySelector("#now").textContent = `The cloud says it's ${new Date(data.now).toLocaleTimeString()}.`;
+    }
+    </script>
+</head>
+<body>
+  <h1>SSE example</h1>
+  <p>
+    <button onclick="getTheTime()">Ask the cloud!</button>
+    <button onclick="checkSSE()">Check SSE</button>
+    <button onclick="enableSSE()">Enable SSE</button>
+    <span id="now"></span>
+  </p>
+</body>
+</html>

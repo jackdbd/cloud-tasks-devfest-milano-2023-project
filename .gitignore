@@ -3,3 +3,7 @@ node_modules/
 
 # environment variables
 .envrc
+
+# build artifacts
+**/**/dist/
+**/**/public/

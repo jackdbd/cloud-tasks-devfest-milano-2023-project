@@ -1,0 +1,11 @@
+{
+  "name": "enqueuer",
+  "version": "0.1.0",
+  "description": "Enqueue tasks",
+  "scripts": {
+    "start": "NODE_ENV=production functions-framework --port=8090 --target=enqueueTask"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0"
+  }
+}

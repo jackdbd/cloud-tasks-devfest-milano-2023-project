@@ -1,0 +1,27 @@
+{
+  "name": "sse-frontend",
+  "version": "0.1.0",
+  "description": "Server-sent events frontend",
+  "author": {
+    "name": "Giacomo Debidda",
+    "email": "giacomo@giacomodebidda.com",
+    "url": "https://www.giacomodebidda.com/"
+  },
+  "license": "MIT",
+  "private": true,
+  "keywords": [
+    "sse"
+  ],
+  "type": "module",
+  "module": "public/index.js",
+  "exports": {
+    ".": "./public/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "rimraf public && mkdir public && cp src/* public",
+    "clean": "rimraf public/",
+    "start": "http-server public --port 8080 -c5 --cors"
+  },
+  "dependencies": {}
+}
