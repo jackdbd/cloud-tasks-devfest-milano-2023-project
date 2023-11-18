@@ -7,7 +7,6 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
-    "container:sse": "npm run container:build -w sse-backend",
     "deploy": "pulumi up --yes",
     "nuke": "rm -rf node_modules package-lock.json",
     "start": "run-p --print-label start:sse-backend start:sse-frontend start:enqueuer",

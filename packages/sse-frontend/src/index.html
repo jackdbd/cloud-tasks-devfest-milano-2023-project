@@ -13,9 +13,6 @@
     });
 
     async function enableSSE() {
-      // const response = await fetch(`${config.sse_endpoint}`);
-      // const data = await response.json();
-      // console.log("🚀 ~ enableSSE ~ data:", data)
 
       const sse = new EventSource(config.sse_endpoint)
 
