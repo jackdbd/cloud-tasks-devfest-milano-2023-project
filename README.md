@@ -15,16 +15,11 @@ gcloud services enable artifactregistry.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable cloudfunctions.googleapis.com
 gcloud services enable run.googleapis.com
+gcloud services enable cloudtasks.googleapis.com
 ```
 
 You can use this command to check that all the necessary Google Cloud APIs are enabled.
 
 ```sh
 gcloud services list --enabled
-```
-
-## Deploy the updates
-
-```sh
-npm run deploy
 ```

@@ -1,9 +1,7 @@
 import * as path from "node:path";
-import { cwd } from "node:process";
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
-
-const repo_root = cwd();
+import { repo_root } from "./constants";
 
 // https://www.pulumi.com/registry/packages/gcp/api-docs/storage/
 export const enqueuer_bucket = new gcp.storage.Bucket("enqueuer-bucket", {

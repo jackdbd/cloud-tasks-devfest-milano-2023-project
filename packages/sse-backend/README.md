@@ -38,3 +38,8 @@ curl -X GET $SSE_BACKEND \
   -H "Authorization: bearer $(gcloud auth print-identity-token)" \
   -H "Content-Type: application/json" | jq
 ```
+
+```sh
+curl -X GET $SSE_BACKEND \
+  -H "Content-Type: application/json" | jq
+```

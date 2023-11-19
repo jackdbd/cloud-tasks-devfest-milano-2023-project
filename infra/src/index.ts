@@ -1,14 +1,16 @@
 import * as path from "node:path";
-import { cwd } from "node:process";
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
 import * as synced from "@pulumi/synced-folder";
-import { project, enqueuer_location, worker_location } from "./iac/constants";
-import { enqueuer, enqueuer_2nd_gen } from "./iac/cloud-functions";
-import { sse_backend_service, worker } from "./iac/cloud-run";
-import { frontend_bucket } from "./iac/cloud-storage";
-
-const repo_root = cwd();
+import {
+  project,
+  repo_root,
+  enqueuer_location,
+  worker_location,
+} from "./constants";
+import { enqueuer, enqueuer_2nd_gen } from "./cloud-functions";
+import { sse_backend_service, worker } from "./cloud-run";
+import { frontend_bucket } from "./cloud-storage";
 
 const frontend_path = path.join(
   repo_root,

@@ -1,15 +1,12 @@
 import * as path from "node:path";
-import { cwd } from "node:process";
 import * as pulumi from "@pulumi/pulumi";
 import * as docker from "@pulumi/docker";
 import * as gcp from "@pulumi/gcp";
-import { project, worker_location, worker_name } from "./constants";
+import { project, repo_root, worker_location, worker_name } from "./constants";
 import { sa_worker } from "./service-accounts";
 import { queue } from "./cloud-tasks";
 import { docker_registry } from "./repositories";
 import { enable_cloud_run } from "./services";
-
-const repo_root = cwd();
 
 // https://www.pulumi.com/registry/packages/gcp/api-docs/cloudrunv2/
 export const worker = new gcp.cloudrunv2.Service(

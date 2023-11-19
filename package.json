@@ -1,25 +1,29 @@
 {
-  "name": "devfest-milano-2023",
-  "main": "index.ts",
+  "name": "root",
+  "description": "Monorepo for my Cloud Tasks presentation at DevFest Milano 2023",
+  "author": {
+    "name": "Giacomo Debidda",
+    "email": "giacomo@giacomodebidda.com",
+    "url": "https://www.giacomodebidda.com/"
+  },
+  "license": "MIT",
+  "private": true,
   "workspaces": [
+    "infra",
     "packages/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present",
-    "deploy": "pulumi up --yes",
     "nuke": "rm -rf node_modules package-lock.json",
+    "pulumi:stack:output": "npm run stack:output -w infra",
+    "pulumi:up": "npm run up -w infra",
     "start": "run-p --print-label start:sse-backend start:sse-frontend start:enqueuer",
     "start:enqueuer": "npm run start -w enqueuer",
     "start:sse-backend": "npm run start -w sse-backend",
     "start:sse-frontend": "npm run start -w sse-frontend"
   },
-  "dependencies": {
-    "@pulumi/docker": "^4.4.5",
-    "@pulumi/gcp": "^7.1.0",
-    "@pulumi/pulumi": "^3.94.1",
-    "@pulumi/synced-folder": "^0.11.1"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/node": "^20.9.0",
     "http-server": "^14.1.1",

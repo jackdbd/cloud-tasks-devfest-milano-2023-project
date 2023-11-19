@@ -29,3 +29,10 @@ export const enable_cloud_run = new gcp.projects.Service(
     disableOnDestroy: true,
   }
 );
+
+export const enable_cloud_tasks = new gcp.projects.Service(
+  "enable-cloud-tasks-api",
+  {
+    service: "cloudtasks.googleapis.com",
+  }
+);

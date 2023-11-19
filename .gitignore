@@ -4,6 +4,10 @@ node_modules/
 # environment variables
 .envrc
 
+# secrets
+secrets/*
+!secrets/README.md
+
 # build artifacts
-**/**/dist/
-**/**/public/
+packages/**/dist/
+packages/**/public/
