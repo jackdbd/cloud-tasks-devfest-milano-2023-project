@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "chakrounanas.turbo-console-log",
+    "eg2.vscode-npm-script",
+    "esbenp.prettier-vscode",
+    "pflannery.vscode-versionlens",
+    "yoavbls.pretty-ts-errors"
+  ]
+}
