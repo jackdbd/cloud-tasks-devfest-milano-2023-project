@@ -2,10 +2,15 @@
   "name": "enqueuer",
   "version": "0.1.0",
   "description": "Enqueue tasks",
+  "type": "module",
   "scripts": {
-    "start": "NODE_ENV=production functions-framework --port=8090 --target=enqueueTask"
+    "dev": "ls *.js | DEVELOPMENT=true NODE_ENV=production entr -r functions-framework --port=4000 --target=enqueueTask",
+    "start": "DEVELOPMENT=true NODE_ENV=production functions-framework --port=4000 --target=enqueueTask"
   },
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.3.0"
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google-cloud/tasks": "^4.0.1",
+    "@jackdbd/tags-logger": "^1.1.0",
+    "nanoid": "^5.0.3"
   }
 }

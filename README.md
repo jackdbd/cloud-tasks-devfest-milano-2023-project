@@ -23,3 +23,15 @@ You can use this command to check that all the necessary Google Cloud APIs are e
 ```sh
 gcloud services list --enabled
 ```
+
+Retrieve the current IAM policy for the GCP project:
+
+```sh
+gcloud projects get-iam-policy $GCP_PROJECT_ID
+```
+
+```sh
+gcloud projects add-iam-policy-binding $GCP_PROJECT_ID \
+--member="serviceAccount:${SA_ENQUEUER_EMAIL}" \
+--role='roles/cloudtasks.enqueuer'
+```

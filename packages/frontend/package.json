@@ -1,0 +1,21 @@
+{
+  "name": "frontend",
+  "version": "0.0.0",
+  "author": {
+    "name": "Giacomo Debidda",
+    "email": "giacomo@giacomodebidda.com",
+    "url": "https://www.giacomodebidda.com/"
+  },
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && vite build",
+    "clean": "rimraf dist/",
+    "dev": "vite --port=8090",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "preact": "^10.19.2"
+  }
+}

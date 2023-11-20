@@ -26,6 +26,10 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
   },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
   // https://github.com/prettier/prettier-vscode#prettierconfigpath
   "prettier.configPath": "config/prettier.cjs",
   "prettier.requireConfig": true

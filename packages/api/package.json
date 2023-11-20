@@ -1,0 +1,16 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "description": "Some rate-limited API",
+  "type": "module",
+  "scripts": {
+    "dev": "ls *.js | DEVELOPMENT=true NODE_ENV=production entr -r functions-framework --port=5000 --target=handler",
+    "start": "DEVELOPMENT=true NODE_ENV=production functions-framework --port=5000 --target=handler"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@jackdbd/tags-logger": "^1.1.0",
+    "bottleneck": "^2.19.5",
+    "nanoid": "^5.0.3"
+  }
+}
