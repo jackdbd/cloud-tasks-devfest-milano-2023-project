@@ -21,7 +21,11 @@ export default defineConfig(async ({ command, mode }) => {
     }
   }
 
-  if (command === 'build') {
+  // It's better to use `mode === 'production'` rather than `command === 'build'`
+  // so the configuration is fetched from Cloud Storage when:
+  // 1. the app is hosted on Cloud Storage
+  // 2. the app is served locally by vite preview
+  if (mode === 'production') {
     const config_url = `${bucket_root}/config.json`
     console.log(`fetch config from Cloud Storage`, config_url)
     const res = await fetch(config_url)
@@ -32,13 +36,7 @@ export default defineConfig(async ({ command, mode }) => {
       ...config,
       base: bucket_root,
       define: {
-        __CONFIG: JSON.stringify({
-          api: cfg.api,
-          enqueuer: cfg.enqueuer,
-          project: cfg.project,
-          queue_location: cfg.queue_location,
-          queue_name: cfg.queue_name
-        })
+        __CONFIG: JSON.stringify(cfg)
       }
     }
   } else {

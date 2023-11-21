@@ -42,18 +42,19 @@ export const events_service = new gcp.cloudrunv2.Service(
             cpuIdle: true,
             limits: { cpu: '1000m', memory: '512Mi' },
             startupCpuBoost: false
-          },
-          startupProbe: {
-            failureThreshold: 3,
-            initialDelaySeconds: 1,
-            periodSeconds: 240,
-            tcpSocket: { port: 8080 },
-            timeoutSeconds: 10
           }
+          // livenessProbe: {},
+          // startupProbe: {
+          //   failureThreshold: 3,
+          //   initialDelaySeconds: 1,
+          //   periodSeconds: 240,
+          //   tcpSocket: { port: 8080 },
+          //   timeoutSeconds: 10
+          // }
         }
       ],
       maxInstanceRequestConcurrency: 10,
-      timeout: '2.5s',
+      timeout: '60s',
       serviceAccount: sa_events_server.email,
       scaling: { maxInstanceCount: 1, minInstanceCount: 0 }
     },

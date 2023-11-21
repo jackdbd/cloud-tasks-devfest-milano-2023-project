@@ -3,7 +3,8 @@ import functions from '@google-cloud/functions-framework'
 import Bottleneck from 'bottleneck'
 import { nanoid } from 'nanoid'
 
-const log = makeLog({ namespace: 'api' })
+const log = makeLog()
+// const log = makeLog({ namespace: 'api' })
 
 const reservoir = 5
 
@@ -134,6 +135,7 @@ const handler = async (req, res) => {
     }
   }
 
+  // TODO: publish the event to a Cloud Pub/Sub topic, not to this endpoint
   const events_api_response = await fetch(events_endpoint, {
     method: 'POST',
     headers: {
@@ -144,7 +146,7 @@ const handler = async (req, res) => {
   const events_res_body = await events_api_response.json()
   log({ message: events_res_body.message, tags: ['info', 'event'] })
 
-  return res.status(200).json(body)
+  res.status(200).json(body)
 }
 
 // not rate-limited

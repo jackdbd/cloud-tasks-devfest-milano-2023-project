@@ -1,9 +1,109 @@
-#app {
-  background-color: #d3d3d3;
-  max-width: 1280px;
+/* === CSS variables ======================================================== */
+/* 
+ * Colors
+ *
+ * https://encycolorpedia.com/
+ * https://www.colorxs.com/color/
+ * https://www.htmlcsscolor.com/hex/
+ * https://colorbrewer2.org/#type=sequential&scheme=Greys&n=3
+*/
+:root {
+  --color-gray-dark: #636363;
+  --color-gray-medium: #bdbdbd;
+  --color-gray-light: #f0f0f0;
+  --color-alabaster: #f2f0e6;
+  --color-slategray: #708090;
+  --color-snow: #fffafa;
+  --color-white: #fff;
+}
+
+/* === Overrides ============================================================ */
+
+body {
+  /* background-color: var(--color-gray-light); */
+  background-color: var(--color-gray-medium);
+  /* background-color: var(--color-slategray); */
+}
+
+ul.cluster {
+  padding: 0;
+}
+
+/* === Layout primitives ==================================================== */
+.stack > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.stack > * + * {
+  margin-top: var(--stack-space, 1em);
+}
+
+.box {
+  padding: var(--box-space, 1em);
+}
+
+/* https://every-layout.dev/layouts/cluster/ */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  /* max-width: 45rem; */
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  gap: var(--cluster-gap, 1ch);
+}
+
+.cluster > * {
+  --cluster-spacing: 0.05em;
+
+  margin: var(--cluster-spacing);
+}
+
+.cluster[data-align='start'] {
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+.cluster[data-align='end'] {
+  justify-content: flex-end;
+  margin-right: 0;
+}
+
+.wrapper {
+  --min-width: 16rem;
+  --max-width: 65ch;
+
+  margin-right: auto;
+  margin-left: auto;
+  max-width: 95vw;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  width: clamp(var(--min-width), 95vw, var(--max-width));
+  position: relative;
+}
+
+/* === Components =========================================================== */
+
+.event-log-wrapper {
+  --box-space: 0.5em;
+  /* background-color: var(--color-alabaster); */
+  /* width: 100%; */
+}
+
+.event-log {
+  margin: 0;
+  padding: 0;
+}
+
+.event-log-entry {
+  --box-space: 0.5em;
+  --stack-space: 0.25em;
+
+  /* background-color: var(--color-snow); */
+  background-color: var(--color-white);
+  list-style: none;
+  text-align: start;
 }
 
 .logo {
@@ -17,10 +117,30 @@
   filter: drop-shadow(0 0 2em #673ab8aa);
 }
 
-.card {
-  padding: 2em;
+.centered {
+  display: flex;
+  flex-direction: row;
+  align-items: center; /* vertical center alignment */
+  justify-content: center; /* horizontal center alignment */
 }
 
-.read-the-docs {
-  color: #888;
+#app {
+  /* background-color: var(--color-slategray); */
+  /* max-width: 1280px; */
+  /* margin: 0 auto; */
+  /* padding: 2rem; */
+  /* text-align: center; */
+}
+
+/* === Utilities ============================================================ */
+.margin\:0 {
+  margin: 0;
+}
+
+.padding\:0 {
+  padding: 0;
+}
+
+.text-align\:center {
+  text-align: center;
 }

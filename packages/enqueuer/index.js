@@ -3,7 +3,8 @@ import functions from '@google-cloud/functions-framework'
 import { makeLog } from '@jackdbd/tags-logger'
 import { nanoid } from 'nanoid'
 
-const log = makeLog({ namespace: 'enqueuer' })
+const log = makeLog()
+// const log = makeLog({ namespace: 'enqueuer' })
 
 const cloud_tasks = new CloudTasksClient()
 
@@ -92,7 +93,7 @@ functions.http('enqueueTask', async (req, res) => {
 
   log({
     message: `create task ${task_id} for queue ${parent}`,
-    tags: ['debug', 'cloud-tasks']
+    tags: ['info', 'cloud-tasks']
   })
 
   const payload = { events_endpoint: req.body.events_endpoint, task_id }
@@ -117,6 +118,11 @@ functions.http('enqueueTask', async (req, res) => {
         },
         name: `${parent}/tasks/${task_id}`
       }
+    })
+
+    log({
+      message: `created task ${task_id} and sent to Cloud Tasks queue ${parent}`,
+      tags: ['info', 'cloud-tasks']
     })
 
     res.status(201).json({
