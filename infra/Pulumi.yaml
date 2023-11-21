@@ -2,4 +2,5 @@ name: devfest-milano-2023
 runtime: nodejs
 description: A minimal Google Cloud TypeScript Pulumi program
 config:
-  enqueuer-entry-point: enqueueTask
+  func-max-instances: 3
+  func-min-instances: 0

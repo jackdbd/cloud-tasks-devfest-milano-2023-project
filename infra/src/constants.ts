@@ -7,6 +7,8 @@ export const api_name = 'api'
 
 export const enqueuer_location = 'europe-west3'
 export const enqueuer_name = 'enqueuer'
+export const enqueuer_2nd_gen_name = 'enqueuer-2nd-gen'
+export const enqueuer_2nd_gen_location = 'europe-west3'
 
 export const frontend_bucket_name = 'cloud-tasks-devfest-milano-2023-frontend'
 

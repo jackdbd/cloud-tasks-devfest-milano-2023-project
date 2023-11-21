@@ -4,47 +4,51 @@ import * as gcp from '@pulumi/gcp'
 import * as synced from '@pulumi/synced-folder'
 import {
   api_location,
+  api_name,
   enqueuer_location,
+  enqueuer_name,
+  enqueuer_2nd_gen_location,
+  enqueuer_2nd_gen_name,
   project,
   queue_location,
   queue_name,
   repo_root,
   worker_location
 } from './constants'
-import { api, enqueuer } from './cloud-functions'
+import { api, enqueuer, enqueuer_2nd_gen } from './cloud-functions'
 import { sse_backend_service } from './cloud-run'
 import { frontend_bucket } from './cloud-storage'
 import { queue } from './cloud-tasks'
 import { sa_enqueuer } from './service-accounts'
 
 // uncomment this to make the function publicly accessible
-const api_cloudfunctions_invoker = new gcp.cloudfunctions.FunctionIamMember(
-  'api-cloudfunctions-invoker',
-  {
-    cloudFunction: api.name,
-    member: 'allUsers',
-    region: api_location,
-    role: 'roles/cloudfunctions.invoker'
-  }
-)
+new gcp.cloudfunctions.FunctionIamMember('api-cloudfunctions-invoker', {
+  cloudFunction: api.name,
+  member: 'allUsers',
+  region: api_location,
+  role: 'roles/cloudfunctions.invoker'
+})
 
-const enqueuer_cloudfunctions_invoker =
-  new gcp.cloudfunctions.FunctionIamMember('enqueuer-cloudfunctions-invoker', {
-    cloudFunction: enqueuer.name,
-    member: 'allUsers',
-    region: enqueuer_location,
-    role: 'roles/cloudfunctions.invoker'
-  })
+new gcp.cloudfunctions.FunctionIamMember('enqueuer-cloudfunctions-invoker', {
+  cloudFunction: enqueuer.name,
+  member: 'allUsers',
+  region: enqueuer_location,
+  role: 'roles/cloudfunctions.invoker'
+})
 
-const sse_backend_run_invoker = new gcp.cloudrunv2.ServiceIamMember(
-  'sse-backend-run-invoker',
-  {
-    location: worker_location,
-    member: 'allUsers',
-    name: sse_backend_service.name,
-    role: 'roles/run.invoker'
-  }
-)
+new gcp.cloudrunv2.ServiceIamMember('enqueuer-2nd-gen-run-invoker', {
+  location: enqueuer_2nd_gen_location,
+  member: 'allUsers',
+  name: enqueuer_2nd_gen.name,
+  role: 'roles/run.invoker'
+})
+
+new gcp.cloudrunv2.ServiceIamMember('sse-backend-run-invoker', {
+  location: worker_location,
+  member: 'allUsers',
+  name: sse_backend_service.name,
+  role: 'roles/run.invoker'
+})
 
 // Create a JSON file containing all backend URLs and host it on the same bucket
 // where it is hosted the frontend.
@@ -69,19 +73,16 @@ const config_json = new gcp.storage.BucketObject('config-json', {
     })
 })
 
-const synced_folder = new synced.GoogleCloudFolder('synced-folder', {
+new synced.GoogleCloudFolder('synced-folder', {
   bucketName: frontend_bucket.name,
   path: path.join(repo_root, 'packages', 'frontend', 'dist')
 })
 
-const frontend_bucket_IAM_binding = new gcp.storage.BucketIAMBinding(
-  'frontend-bucket-iam-binding',
-  {
-    bucket: frontend_bucket.name,
-    role: 'roles/storage.objectViewer',
-    members: ['allUsers']
-  }
-)
+new gcp.storage.BucketIAMBinding('frontend-bucket-iam-binding', {
+  bucket: frontend_bucket.name,
+  role: 'roles/storage.objectViewer',
+  members: ['allUsers']
+})
 
 const serviceaccount_users = new gcp.projects.IAMBinding(
   'serviceaccount-users',
@@ -94,37 +95,21 @@ const serviceaccount_users = new gcp.projects.IAMBinding(
 
 export const service_account_users = serviceaccount_users.members
 
-// this does NOT work (I think)
-// export const cloudtasks_enqueuers = new gcp.projects.IAMBinding(
-//   'cloudtasks-enqueuers',
-//   {
-//     members: [sa_enqueuer.email.apply((email) => `serviceAccount:${email}`)],
-//     // https://cloud.google.com/tasks/docs/reference-access-control#roles
-//     role: 'roles/cloudtasks.enqueuer',
-//     project
-//   }
-// )
-
-// this works
-const cloudtasks_enqueuers = new gcp.cloudtasks.QueueIamBinding(
-  'cloudtasks-enqueuers',
-  {
-    location: queue_location,
-    members: [sa_enqueuer.email.apply((email) => `serviceAccount:${email}`)],
-    name: queue.name,
-    // https://cloud.google.com/tasks/docs/reference-access-control#roles
-    role: 'roles/cloudtasks.enqueuer'
-  }
-)
+new gcp.cloudtasks.QueueIamBinding('cloudtasks-enqueuers', {
+  location: queue_location,
+  members: [sa_enqueuer.email.apply((email) => `serviceAccount:${email}`)],
+  name: queue.name,
+  // https://cloud.google.com/tasks/docs/reference-access-control#roles
+  role: 'roles/cloudtasks.enqueuer'
+})
 
 export const frontend = pulumi.interpolate`https://storage.googleapis.com/${frontend_bucket.name}/${frontend_bucket.website.mainPageSuffix}`
 
-// const services_url = {
-//   api: api.httpsTriggerUrl,
-//   enqueuer: enqueuer.httpsTriggerUrl,
-//   frontend: pulumi.interpolate`https://storage.googleapis.com/${frontend_bucket.name}/${frontend_bucket.website.mainPageSuffix}`
-//   // sse_backend: sse_backend_service.uri,
-// }
+export const backend_services = {
+  [api_name]: api.httpsTriggerUrl,
+  [enqueuer_name]: enqueuer.httpsTriggerUrl,
+  [enqueuer_2nd_gen_name]: enqueuer_2nd_gen.url
+}
 
 // I think it's always a good idea to show the IAM bindings of the Google Cloud
 // project and other important Google Cloud resources.
