@@ -6,10 +6,11 @@ todo
 curl --max-time 5 -X POST "$ENQUEUER/" \
   -H "Content-Type: application/json; charset=utf-8" \
   -d "{
-    \"project\": \"devfest-milano-2023\",
-    \"url\": \"$API/\",
+    \"events_endpoint\": \"$EVENTS_ENDPOINT\",
     \"location\": \"europe-west3\",
-    \"queue\": \"my-queue\"
+    \"project\": \"devfest-milano-2023\",
+    \"queue\": \"my-queue\",
+    \"url\": \"$API/\"
   }" | jq
 ```
 
@@ -17,9 +18,10 @@ curl --max-time 5 -X POST "$ENQUEUER/" \
 curl --max-time 5 -X POST "$ENQUEUER_2ND_GEN/" \
   -H "Content-Type: application/json; charset=utf-8" \
   -d "{
+    \"events_endpoint\": \"$EVENTS_ENDPOINT\",
     \"project\": \"devfest-milano-2023\",
-    \"url\": \"$API/\",
     \"location\": \"europe-west3\",
-    \"queue\": \"my-queue\"
+    \"queue\": \"my-queue\",
+    \"url\": \"$API/\"
   }" | jq
 ```

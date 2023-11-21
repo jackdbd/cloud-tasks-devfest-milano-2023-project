@@ -1,9 +1,9 @@
 {
   "api": "http://127.0.0.1:5000",
   "enqueuer": "http://127.0.0.1:4000",
+  "events_endpoint": "http://127.0.0.1:5555/events",
   "project": "devfest-milano-2023",
   "queue_location": "europe-west3",
   "queue_name": "my-queue",
-  "sse_root": "http://127.0.0.1:6000/",
-  "sse_endpoint": "http://127.0.0.1:6000/sse"
+  "sse_endpoint": "http://127.0.0.1:5555/sse"
 }

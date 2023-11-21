@@ -9,14 +9,15 @@ import {
   enqueuer_name,
   enqueuer_2nd_gen_location,
   enqueuer_2nd_gen_name,
+  events_server_location,
+  events_server_name,
   project,
   queue_location,
   queue_name,
-  repo_root,
-  worker_location
+  repo_root
 } from './constants'
 import { api, enqueuer, enqueuer_2nd_gen } from './cloud-functions'
-import { sse_backend_service } from './cloud-run'
+import { events_service } from './cloud-run'
 import { frontend_bucket } from './cloud-storage'
 import { queue } from './cloud-tasks'
 import { sa_enqueuer } from './service-accounts'
@@ -43,10 +44,10 @@ new gcp.cloudrunv2.ServiceIamMember('enqueuer-2nd-gen-run-invoker', {
   role: 'roles/run.invoker'
 })
 
-new gcp.cloudrunv2.ServiceIamMember('sse-backend-run-invoker', {
-  location: worker_location,
+new gcp.cloudrunv2.ServiceIamMember('events-service-run-invoker', {
+  location: events_server_location,
   member: 'allUsers',
-  name: sse_backend_service.name,
+  name: events_service.name,
   role: 'roles/run.invoker'
 })
 
@@ -59,15 +60,17 @@ const config_json = new gcp.storage.BucketObject('config-json', {
   contentType: 'application/json',
   name: 'config.json',
   source: pulumi
-    .all([api.httpsTriggerUrl, enqueuer.httpsTriggerUrl])
-    .apply(([api_url, enqueuer_url]) => {
+    .all([api.httpsTriggerUrl, enqueuer.httpsTriggerUrl, events_service.uri])
+    .apply(([api_url, enqueuer_url, sse_server_url]) => {
       return new pulumi.asset.StringAsset(
         JSON.stringify({
           api: api_url,
           enqueuer: enqueuer_url,
+          events_endpoint: `${sse_server_url}/events`,
           project,
           queue_location,
-          queue_name
+          queue_name,
+          sse_endpoint: `${sse_server_url}/sse`
         })
       )
     })
@@ -108,7 +111,8 @@ export const frontend = pulumi.interpolate`https://storage.googleapis.com/${fron
 export const backend_services = {
   [api_name]: api.httpsTriggerUrl,
   [enqueuer_name]: enqueuer.httpsTriggerUrl,
-  [enqueuer_2nd_gen_name]: enqueuer_2nd_gen.url
+  [enqueuer_2nd_gen_name]: enqueuer_2nd_gen.url,
+  [events_server_name]: events_service.uri
 }
 
 // I think it's always a good idea to show the IAM bindings of the Google Cloud

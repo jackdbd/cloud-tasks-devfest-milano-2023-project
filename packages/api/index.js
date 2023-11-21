@@ -64,11 +64,6 @@ const handler = async (req, res) => {
     return res.status(405).json({ message })
   }
 
-  let task_id = undefined
-  if (req.method === 'GET') {
-    task_id = req.query.task_id
-  }
-
   if (req.method === 'POST') {
     const content_type = req.header('content-type')
     if (!content_type || !content_type.includes('application/json')) {
@@ -76,12 +71,35 @@ const handler = async (req, res) => {
       log({ message, tags: ['warning', 'request-headers'] })
       return res.status(400).send({ message })
     }
+  }
+
+  let task_id = undefined
+  if (req.method === 'GET') {
+    task_id = req.query.task_id
+  }
+
+  if (req.method === 'POST') {
     task_id = req.body.task_id
   }
 
   if (!task_id) {
     const message = `task_id is required`
     log({ message, tags: ['warning', 'task-id'] })
+    return res.status(400).send({ message })
+  }
+
+  let events_endpoint = undefined
+  if (req.method === 'GET') {
+    events_endpoint = req.query.events_endpoint
+  }
+
+  if (req.method === 'POST') {
+    events_endpoint = req.body.events_endpoint
+  }
+
+  if (!events_endpoint) {
+    const message = `events_endpoint is required`
+    log({ message, tags: ['warning', 'events-endpoint'] })
     return res.status(400).send({ message })
   }
 
@@ -96,7 +114,7 @@ const handler = async (req, res) => {
 
   const current_reservoir = await limiter.currentReservoir()
 
-  return res.status(200).json({
+  const body = {
     api_response_sent_at: Date.now(),
     message: `API responded correctly`,
     req_headers: req.headers,
@@ -114,7 +132,19 @@ const handler = async (req, res) => {
       PATH: process.env.PATH.split(':'),
       USER: process.env.USER
     }
+  }
+
+  const events_api_response = await fetch(events_endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    },
+    body: JSON.stringify(body)
   })
+  const events_res_body = await events_api_response.json()
+  log({ message: events_res_body.message, tags: ['info', 'event'] })
+
+  return res.status(200).json(body)
 }
 
 // not rate-limited

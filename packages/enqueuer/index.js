@@ -79,6 +79,10 @@ functions.http('enqueueTask', async (req, res) => {
     return res.status(400).send({ message: 'url is required' })
   }
 
+  if (!req.body.events_endpoint) {
+    return res.status(400).send({ message: 'events_endpoint is required' })
+  }
+
   const parent = cloud_tasks.queuePath(
     req.body.project,
     req.body.location,
@@ -91,7 +95,7 @@ functions.http('enqueueTask', async (req, res) => {
     tags: ['debug', 'cloud-tasks']
   })
 
-  const payload = { task_id }
+  const payload = { events_endpoint: req.body.events_endpoint, task_id }
   const enqueued_by = 'enqueuer'
 
   // schedule the task 5 seconds from now

@@ -26,13 +26,12 @@ export default defineConfig(async ({ command, mode }) => {
     console.log(`fetch config from Cloud Storage`, config_url)
     const res = await fetch(config_url)
     const cfg = await res.json()
-    console.log(`config retrieved from Cloud Storage`)
+    console.log(`config retrieved from Cloud Storage`, cfg)
 
     config = {
       ...config,
       base: bucket_root,
       define: {
-        // __AAA: JSON.stringify('is-production'),
         __CONFIG: JSON.stringify({
           api: cfg.api,
           enqueuer: cfg.enqueuer,
@@ -46,11 +45,10 @@ export default defineConfig(async ({ command, mode }) => {
     const filepath = path.join(repo_root, 'config', 'config-local.json')
     console.log(`read config from file system`, filepath)
     const cfg = fs.readFileSync(filepath, 'utf-8')
-    console.log(`config retrieved from file system`)
+    console.log(`config retrieved from file system`, cfg)
     config = {
       ...config,
       define: {
-        // __AAA: JSON.stringify('is-not-production'),
         __CONFIG: cfg
       },
       // https://github.com/expressjs/cors#configuration-options

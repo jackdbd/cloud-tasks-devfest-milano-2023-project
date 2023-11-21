@@ -1,7 +1,7 @@
 {
-  "name": "sse-backend",
+  "name": "events-server",
   "version": "0.1.0",
-  "description": "Server-sent events backend",
+  "description": "Application that stores and delivers events",
   "author": {
     "name": "Giacomo Debidda",
     "email": "giacomo@giacomodebidda.com",
@@ -10,6 +10,7 @@
   "license": "MIT",
   "private": true,
   "keywords": [
+    "events",
     "fastify",
     "sse"
   ],
@@ -22,14 +23,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist/ tsconfig.tsbuildinfo",
-    "container:build": "docker build ./ --file Dockerfile --build-arg APP_NAME=sse-backend --tag sse-backend:latest",
-    "container:inspect": "dive sse-backend:latest",
-    "container:run": "docker run -it --rm --env PORT=8080 -p 8080:8080 sse-backend:latest",
-    "start": "NODE_ENV=production PORT=4000 tsm ./src/main.ts",
-    "start:js": "NODE_ENV=production PORT=4000 node ./dist/main.js"
+    "container:build": "docker build ./ --file Dockerfile --build-arg APP_NAME=events-server --tag events-server:latest",
+    "container:inspect": "dive events-server:latest",
+    "container:run": "docker run -it --rm --env PORT=8080 -p 8080:8080 events-server:latest",
+    "dev": "ls src/*.ts | DEVELOPMENT=true NODE_ENV=production PORT=5555 entr -r tsm ./src/main.ts"
   },
   "dependencies": {
     "fastify": "^4.24.3",
-    "fastify-sse-v2": "^3.1.2"
+    "fastify-sse-v2": "^3.1.2",
+    "nanoid": "^5.0.3"
   }
 }

@@ -1,9 +1,9 @@
 import * as gcp from '@pulumi/gcp'
-import { api_name, enqueuer_name, worker_name } from './constants'
+import { api_name, enqueuer_name, events_server_name } from './constants'
 
 const sa_api_id = `${api_name}-user`
 const sa_enqueuer_id = `${enqueuer_name}-user`
-const sa_worker_id = `${worker_name}-user`
+const sa_events_server_id = `${events_server_name}-user`
 
 export const sa_api = new gcp.serviceaccount.Account(sa_api_id, {
   accountId: sa_api_id,
@@ -17,8 +17,12 @@ export const sa_enqueuer = new gcp.serviceaccount.Account(sa_enqueuer_id, {
   displayName: 'Tasks enqueuer service account'
 })
 
-export const sa_worker = new gcp.serviceaccount.Account(sa_worker_id, {
-  accountId: sa_worker_id,
-  description: 'Service Account for the application that processes tasks',
-  displayName: 'Tasks worker service account'
-})
+export const sa_events_server = new gcp.serviceaccount.Account(
+  sa_events_server_id,
+  {
+    accountId: sa_events_server_id,
+    description:
+      'Service Account for the application that stores and delivers events',
+    displayName: 'Events server service account'
+  }
+)
