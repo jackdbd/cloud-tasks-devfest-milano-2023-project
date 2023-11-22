@@ -11,6 +11,7 @@ import {
   enqueuer_2nd_gen_name,
   events_server_location,
   events_server_name,
+  firestore_database_name,
   project,
   queue_location,
   queue_name,
@@ -20,7 +21,22 @@ import { api, enqueuer, enqueuer_2nd_gen } from './cloud-functions'
 import { events_service } from './cloud-run'
 import { frontend_bucket } from './cloud-storage'
 import { queue } from './cloud-tasks'
-import { sa_enqueuer } from './service-accounts'
+import { sa_api, sa_enqueuer } from './service-accounts'
+import { enable_cloud_firestore } from './services'
+
+const database = new gcp.firestore.Database(
+  firestore_database_name,
+  {
+    // https://firebase.google.com/docs/firestore/locations#types
+    locationId: 'eur3',
+    name: firestore_database_name,
+    // we want real-time updates and mobile and web client libraries, so we need
+    // Firestore in Native mode
+    // https://cloud.google.com/datastore/docs/firestore-or-datastore
+    type: 'FIRESTORE_NATIVE'
+  },
+  { dependsOn: [enable_cloud_firestore] }
+)
 
 // uncomment this to make the function publicly accessible
 new gcp.cloudfunctions.FunctionIamMember('api-cloudfunctions-invoker', {
@@ -96,7 +112,15 @@ const serviceaccount_users = new gcp.projects.IAMBinding(
   }
 )
 
-export const service_account_users = serviceaccount_users.members
+export const service_account_users_members = serviceaccount_users.members
+
+const datastore_users = new gcp.projects.IAMBinding('datastore-users', {
+  project,
+  role: 'roles/datastore.user',
+  members: [sa_api.email.apply((email) => `serviceAccount:${email}`)]
+})
+
+export const datastore_users_members = datastore_users.members
 
 new gcp.cloudtasks.QueueIamBinding('cloudtasks-enqueuers', {
   location: queue_location,

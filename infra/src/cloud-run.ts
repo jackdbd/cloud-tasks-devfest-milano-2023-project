@@ -39,6 +39,11 @@ export const events_service = new gcp.cloudrunv2.Service(
           envs: [{ name: 'NODE_ENV', value: 'production' }],
           image: events_server_image.id,
           resources: {
+            // Since Server Sent Event are server side, pushing changes to the
+            // client won't work, unless you have CPU allocated.
+            // https://www.googlecloudcommunity.com/gc/Serverless/Server-Sent-Events-on-Cloud-Run-not-working/td-p/609896
+            // https://cloud.google.com/run/docs/configuring/cpu-allocation
+            // cpuIdle: false,
             cpuIdle: true,
             limits: { cpu: '1000m', memory: '512Mi' },
             startupCpuBoost: false

@@ -1,4 +1,5 @@
 import { makeLog } from '@jackdbd/tags-logger'
+import { Firestore } from '@google-cloud/firestore'
 import functions from '@google-cloud/functions-framework'
 import Bottleneck from 'bottleneck'
 import { nanoid } from 'nanoid'
@@ -15,6 +16,8 @@ const limiter = new Bottleneck({
   maxConcurrent: 1,
   minTime: 500 // in ms
 })
+
+const firestore = new Firestore({ databaseId: 'firestore-database' })
 
 const handler = async (req, res) => {
   const req_id = nanoid()
@@ -128,23 +131,59 @@ const handler = async (req, res) => {
     current_reservoir,
     task_id,
     env: {
-      HOME: process.env.HOME,
-      NODE_ENV: process.env.NODE_ENV,
+      HOME: process.env.HOME || 'unknown',
+      NODE_ENV: process.env.NODE_ENV || 'unknown',
       PATH: process.env.PATH.split(':'),
-      USER: process.env.USER
+      USER: process.env.USER || 'unknown'
     }
   }
 
+  const collection_name = 'events'
+
+  const doc_ref = firestore.collection(collection_name).doc()
+  // https://googleapis.dev/nodejs/firestore/latest/DocumentReference.html#set
+  // const doc_ref = firestore.doc(`${collection_name}/${req_id}`)
+  // const doc_id = 'tszuI0dNBifpaoyveqZe'
+  // const doc_ref = firestore.doc(`${collection_name}/${doc_id}`)
+  // const doc_ref = firestore.doc('posts/intro-to-firestore')
+
+  try {
+    log({
+      message: `try storing event ID EVENT-ID-HERE in Firestore collection ${collection_name}`,
+      tags: ['info', 'event', 'firestore']
+    })
+    await doc_ref.create(body)
+    // const result = await doc_ref.set(body)
+    log({
+      message: `Firestore document written`,
+      tags: ['info', 'event', 'firestore']
+    })
+    // log({
+    //   message: `written document at ${result.writeTime}`,
+    //   tags: ['info', 'event', 'firestore']
+    // })
+  } catch (err) {
+    console.error('=== handler error ===', err)
+    const message = `failed to create document in Firestore collection ${collection_name}`
+    log({
+      message,
+      tags: ['error', 'event', 'firestore'],
+      error_message: err.message
+    })
+    res.status(500).json({ message, errored: true })
+    return
+  }
+
   // TODO: publish the event to a Cloud Pub/Sub topic, not to this endpoint
-  const events_api_response = await fetch(events_endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8'
-    },
-    body: JSON.stringify(body)
-  })
-  const events_res_body = await events_api_response.json()
-  log({ message: events_res_body.message, tags: ['info', 'event'] })
+  // const events_api_response = await fetch(events_endpoint, {
+  //   method: 'POST',
+  //   headers: {
+  //     'Content-Type': 'application/json; charset=utf-8'
+  //   },
+  //   body: JSON.stringify(body)
+  // })
+  // const events_res_body = await events_api_response.json()
+  // log({ message: events_res_body.message, tags: ['info', 'event'] })
 
   res.status(200).json(body)
 }

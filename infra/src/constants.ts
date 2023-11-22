@@ -13,6 +13,9 @@ export const enqueuer_2nd_gen_location = 'europe-west3'
 export const events_server_location = 'europe-west8'
 export const events_server_name = 'events-server'
 
+export const firestore_database_name = 'firestore-database'
+export const firestore_events_collection_name = 'events'
+
 export const frontend_bucket_name = 'cloud-tasks-devfest-milano-2023-frontend'
 
 export const queue_location = 'europe-west3'

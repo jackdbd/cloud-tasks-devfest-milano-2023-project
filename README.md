@@ -32,6 +32,12 @@ gcloud projects get-iam-policy $GCP_PROJECT_ID
 
 ```sh
 gcloud projects add-iam-policy-binding $GCP_PROJECT_ID \
---member="serviceAccount:${SA_ENQUEUER_EMAIL}" \
---role='roles/cloudtasks.enqueuer'
+  --member="serviceAccount:${SA_ENQUEUER_EMAIL}" \
+  --role='roles/cloudtasks.enqueuer'
+```
+
+```sh
+gcloud projects add-iam-policy-binding $GCP_PROJECT_ID \
+  --member="serviceAccount:${SA_API_EMAIL}" \
+  --role='roles/datastore.user'
 ```

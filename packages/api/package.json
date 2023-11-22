@@ -8,6 +8,7 @@
     "start": "DEVELOPMENT=true NODE_ENV=production functions-framework --port=5000 --target=handler"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^7.1.0",
     "@google-cloud/functions-framework": "^3.3.0",
     "@jackdbd/tags-logger": "^1.1.0",
     "bottleneck": "^2.19.5",
